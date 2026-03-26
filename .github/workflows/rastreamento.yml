@@ -1,0 +1,40 @@
+# .github/workflows/rastreamento.yml
+
+name: Atualizar Rastreios
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rastrear:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache de dependências pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Instalar Google Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Atualizar rastreios ativos
+        env:
+          GCP_SERVICE_ACCOUNT_BASE64: ${{ secrets.CREDENTIALS_BASE64 }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+        run: |
+          python rastreamento.py
